@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="FAQ">
+	<!-- 리스트 보기 -->
+	<select id="getList" resultType="faq">
+		SELECT
+			fno, ftitle, fbody, fdate
+		FROM 
+			faq
+		WHERE
+			fisshow = '1'
+		ORDER BY
+			fno DESC
+	</select>
+	
+	<!-- 데이터 총 개수 구하기 -->
+	<select id="getTotalList" resultType="int">
+		SELECT
+			count(*) as total
+		FROM
+			faq
+		WHERE
+			fisshow = '1'
+	</select>
+	
+	<!-- 글 쓰기 -->
+	<insert id="writeProc" parameterType="faq">
+		INSERT
+		INTO
+			faq
+		VALUES
+			((select ifnull(max(fno), 0) + 1 from faq ALIAS_FOR_SUBQUERY)
+			, #{ftitle}, #{fbody}, curdate(), '1')
+	
+	</insert>
+	
+	<!-- 상세보기 -->
+	<select id="getView" parameterType="int" resultType="faq">
+		select
+			fno, ftitle, fbody, fdate
+		from
+			faq
+		where
+			fno = #{fno}
+	</select>
+	
+	<!-- 검색 리스트 보기 -->
+	<select id="getSearchList" resultType="faq" parameterType="faq">
+		SELECT
+			fno, ftitle, fbody, fdate
+		FROM 
+			faq
+		WHERE
+			fisshow = '1'
+		<if test="kind eq 'ftitle'">
+			AND ftitle LIKE CONCAT('%', #{word} , '%')
+		</if>
+		<if test="kind eq 'fbody'">
+			AND fbody LIKE CONCAT('%', #{word} , '%')
+		</if>
+		<if test="kind eq 'fboth'">
+			AND (fbody LIKE CONCAT('%', #{word} , '%') 
+			OR ftitle LIKE CONCAT('%', #{word} , '%'))
+		</if>
+		ORDER BY
+			fno DESC
+	</select>
+	
+	<!-- 검색 페이지 정보 구하기 -->
+	<select id="getSearchTotalList" resultType="int" parameterType="faq">
+		SELECT
+			COUNT(*) as total
+		FROM
+			faq
+		WHERE
+		 	fisshow = '1'
+		<if test="kind eq 'ftitle'">
+			AND ftitle LIKE CONCAT('%', #{word} , '%')
+		</if>
+		<if test="kind eq 'fbody'">
+			AND fbody LIKE CONCAT('%', #{word} , '%')
+		</if>
+		<if test="kind eq 'fboth'">
+			AND (fbody LIKE CONCAT('%', #{word} , '%') 
+			OR ftitle LIKE CONCAT('%', #{word} , '%'))
+		</if>
+	</select>	
+</mapper>

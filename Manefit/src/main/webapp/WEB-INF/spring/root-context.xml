@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xsi:schemaLocation="http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.1.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.1.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+	
+	
+	<!-- 	보조적인 환경 설정이 필요하면 설정할 예정이다. -->
+	<!-- 	컨넥션 풀을 잡는다. -->
+	<!-- 스프링이 관장하지 않은 일반 클래스에서도 어노테이션 사용이
+		  가능하도록 선언한다.
+	 -->
+	<context:annotation-config />
+	
+<!-- 	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"> -->
+<!-- 		<property name="driverClassName" value="oracle.jdbc.driver.OracleDriver" /> -->
+<!-- 		<property name="url" value="jdbc:oracle:thin:@192.168.0.7:1521:orcl" /> -->
+<!-- 		<property name="username" value="scott" /> -->
+<!-- 		<property name="password" value="tiger" /> -->
+<!-- 	</bean>    -->
+	
+<!-- 	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean"> -->
+		
+<!-- 		<property name="configLocation" > -->
+				
+<!-- 			<value>classpath:/com/manefit/myBatis/myBatis-config.xml</value> -->
+<!-- 		</property> -->
+<!-- 		<property name="dataSource" ref="dataSource" /> -->
+<!-- 	</bean>  -->
+	
+<!-- 	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate"> -->
+<!-- 		<constructor-arg index="0" ref="sqlSessionFactory" /> -->
+<!-- 	</bean>		 -->
+	
+	
+	<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+      <property name="driverClassName" value="org.mariadb.jdbc.Driver"/>
+      <property name="url" value="jdbc:mariadb://192.168.0.7:3306/manefit"/>
+      <property name="username" value="root"/>
+      <property name="password" value="1234"/>
+   </bean>
+ 
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="configLocation" value="classpath:/com/manefit/myBatis/myBatis-config.xml"/>
+   </bean>
+ 
+    <bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+        <constructor-arg index="0" ref="sqlSessionFactory"/>
+    </bean>
+	    
+	
+	
+	
+	<!-- DAO 등록 -->
+	<bean id = "Shopping" class = "com.manefit.dao.ShoppingDAO">
+		<property name ="sqlSessionTemplate" ref = "sqlSession"/> 
+	</bean>
+
+	<bean id = "Admin" class ="com.manefit.dao.AdminDAO">
+		<property name="sqlSessionTemplate" ref = "sqlSession"></property>
+	</bean>
+
+	<bean id = "Login" class = "com.manefit.dao.LoginDAO">
+		<property name ="sqlSessionTemplate" ref = "sqlSession"/> 
+	</bean>
+	
+	<bean id = "FAQ" class = "com.manefit.dao.FAQDAO">
+		<property name ="sqlSessionTemplate" ref="sqlSession"/>
+	</bean>
+	
+	<bean id = "MyPage" class = "com.manefit.dao.MyPageDAO">
+		<property name ="sqlSessionTemplate" ref="sqlSession"/>
+	</bean>
+	
+	<bean id = "Board" class = "com.manefit.dao.BoardDAO">
+		<property name ="sqlSessionTemplate" ref="sqlSession"/>
+	</bean>
+	
+	
+	
+
+	
+	<!-- service 등록 -->
+	<bean id = "ShoppingService" class = "com.manefit.service.ShoppingService"/>
+	<bean id = "AdminService" class = "com.manefit.service.AdminService"/>
+	<bean id = "LoginService" class = "com.manefit.service.LoginService"/>
+	<bean id = "FAQService" class = "com.manefit.service.FAQService"/>
+	<bean id = "MyPageService" class = "com.manefit.service.MyPageService"/>
+	<bean id = "BoardService" class = "com.manefit.service.BoardService"/>
+</beans>

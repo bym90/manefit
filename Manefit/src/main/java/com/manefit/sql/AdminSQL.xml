@@ -1,0 +1,627 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC 
+				"-//mybatis.org//DTD Mapper 3.0//EN" 
+				"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+				
+				
+<mapper namespace = "Admin">
+
+	<!-- 배너 그림 저장 -->
+	<insert id ="insertimage" parameterType = "shop">
+		insert into image 
+		values(#{savename}, #{path}, 1)
+				
+	</insert>
+	
+
+	
+	<!-- 카테고리 검색 -->
+	<select id = "getCate" parameterType = "shop" resultType = "shop"> 
+		<if test = "kind eq 'LC'">
+			select
+				CCATE as cate,
+				CNAME as name,
+				CNO as no
+			from 
+				CATE
+			where
+				CCATE like '____'
+		</if> 
+		<if test = "kind eq 'MSC'">
+				select
+				CCATE as cate,
+				CNAME as name,
+				CNO as no
+			from 
+				CATE
+			where
+				CCATE like concat(#{cate},'____')
+		</if>
+	</select>
+	
+	
+	<!-- 카테고리 등록 -->
+	<insert id = "insertCate" parameterType = "shop">
+		
+		<selectKey keyProperty = "code" resultType ="string" order ="BEFORE">
+	<if test="kind eq 'LC'">
+		select  concat('L',LPAD(ifnull(MAX(cast(subStr(CCATE, 2)as int)),0) + 1,3,'0')) from CATE
+		where 
+			CCATE like '____'
+	</if>
+	<if test ="kind eq 'MC'">
+		select concat(#{cate},concat('M',LPAD(ifnull(MAX(CAST(subStr(CCATE, 6)as int)),0) + 1,3,'0'))) from CATE
+		where 
+			CCATE like concat(#{cate},'____')
+	</if>
+	<if test = "kind eq 'SC'">
+			select concat(#{cate},concat('S',LPAD(ifnull(MAX(CAST(subStr(CCATE, 10)as int)),0) + 1,3,'0'))) from CATE
+		where 
+			CCATE like concat(#{cate},'____')
+	</if> 
+		</selectKey>
+			insert into CATE 
+			values
+			(0,(select ifnull(max(CNO),0)+1 from CATE ALIAS_FOR_SUBQUERY),#{code},#{name})
+	</insert>
+	
+	<!-- 상품 등록 -->
+	<insert id = "insertGoods" parameterType = "Goods">
+		insert
+		into
+			SGOODSINFO
+		values
+		(#{scate1},(select ifnull(max(GNO),0)+1 from SGOODSINFO ALIAS_FOR_SUBQUERY),#{price},'4',#{tema},'1',#{savename},#{save},#{discount})			
+	</insert>
+	
+	<!-- 중복된 상품등록 제외하기 위한 갯수 -->
+	<select id = "notInsertGoods" parameterType="string" resultType="int">
+		SELECT
+			count(*) as total
+		FROM
+			sgoodsinfo
+		where
+			gcate = #{scate1}
+	</select>
+	
+	<!-- 상품 등록 시 옵션 (사이즈,색상,수량) 초기화 -->
+	<insert id = "insertGoodsOption" parameterType = "goods">
+		insert
+		into
+			Stock
+		values(#{scate1})
+	</insert> 
+	
+	<!-- 상품 이미지 등록 -->
+	<insert id = "insertGoodsImg" parameterType = "Goods">
+		insert 
+		into
+			GOODSIMG
+		values
+		(#{scate1},#{savename})
+	</insert>
+	
+	<!-- 재고관리 총 개수 -->
+	<select id="getSTotalList" parameterType="order" resultType="int">
+		select
+			count(*) as total
+		from 
+			cate c_1 inner join sgoodsinfo s_1 
+	 	where 
+	 		c_1.CCATE = s_1.GCATE and c_1.ccate like '____________'
+	 	<if test="index eq 2">
+	 		and
+	 		s_1.gstatus = 1;
+	 	</if>
+	 	<if test="index eq 3">
+	 		and
+	 		s_1.gstatus = '3';
+	 	</if>
+	 	<if test="index eq 4">
+	 		and
+	 		s_1.gstatus = '4';
+	 	</if>
+	</select>
+	
+	<!-- 재고 관리 품목 -->
+	<select id = "getStockList" parameterType="order" resultType ="Goods">
+	select 	
+			s_1.GNO			 as no,
+			s_1.GCATE 		 as SCATE1,
+			s_1.GNO 		 as GNO,
+			s_1.GPRICE		 as PRICE,
+			s_1.GSAVE		 as	SAVE,
+			CASE s_1.GSTATUS WHEN '1' THEN '신상품'
+					    	 WHEN '2' THEN '판매중'
+					   	 	 WHEN '3' THEN '품절'
+					    	 WHEN '4' THEN '재고준비중'
+					    	 WHEN '5' THEN '판매완료'
+					    	 END AS STATUS,
+			CASE s_1.GTEMA   WHEN '1' THEN '스트릿'
+							 WHEN '2' THEN '캐주얼'
+							 WHEN '3' THEN '정장'
+							 WHEN '4' THEN '스포츠'
+							 WHEN '5' THEN '빈티지'
+							 WHEN '6' THEN '힙합'
+						 	 END AS TEMA,
+			s_1.GIMAGE 		 AS  SAVENAME,
+			s_1.GDISCOUNT    AS  DISCOUNT, 
+			c_1.CNAME 	 	 AS name
+			
+ 	from cate c_1 inner join sgoodsinfo s_1 
+ 	where c_1.CCATE = s_1.GCATE and c_1.ccate like '____________'
+<!--  	<if test="index eq 2"> -->
+<!--  		and -->
+<!--  		s_1.GSTATUS = '1' -->
+<!--  	</if> -->
+<!--  	<if test="index eq 3"> -->
+<!--  		and -->
+<!--  		s_1.GSTATUS = '3' -->
+<!--  	</if> -->
+<!--  	<if test="index eq 4"> -->
+<!--  		and -->
+<!--  		s_1.GSTATUS = '4' -->
+<!--  	</if> -->
+	<choose>
+ 		<when test ="index eq 2">
+ 			and
+ 			s_1.GSTATUS = '1'
+ 		</when>
+ 		<when test ="index eq 3">
+ 			and
+ 			s_1.GSTATUS = '3'
+ 		</when>
+ 		<when test ="index eq 3">
+ 			and
+ 			s_1.GSTATUS = '4'
+ 		</when>
+ 	</choose>
+ 	<choose>
+ 		<when  test ="index eq 0">
+ 			ORDER BY s_1.GNO DESC;
+ 		</when>
+ 		<when  test ="index eq 2">
+ 			ORDER BY s_1.GNO DESC;
+ 		</when>
+ 		<when  test ="index eq 3">
+ 			ORDER BY s_1.GNO DESC;
+ 		</when>
+ 		<when  test ="index eq 4">
+ 			ORDER BY s_1.GNO DESC;
+ 		</when>
+ 		<when  test ="index eq 1">
+ 			ORDER BY c_1.CNAME ASC;
+ 		</when>
+ 		<otherwise>
+ 			ORDER BY s_1.GNO DESC;
+ 		</otherwise>
+ 	</choose>
+
+<!--  	<if test="index eq 0"> -->
+<!-- 	ORDER BY s_1.GNO DESC; -->
+<!-- 	</if> -->
+<!-- 	<if test="index eq 2"> -->
+<!-- 	ORDER BY s_1.GNO DESC; -->
+<!-- 	</if> -->
+<!-- 	<if test="index eq 3"> -->
+<!-- 	ORDER BY s_1.GNO DESC; -->
+<!-- 	</if> -->
+<!-- 	<if test="index eq 4"> -->
+<!-- 	ORDER BY s_1.GNO DESC; -->
+<!-- 	</if> -->
+<!-- 	<if test="index eq 1"> -->
+<!-- 	ORDER BY c_1.CNAME ASC; -->
+<!-- 	</if> -->
+	</select>
+		
+	<!-- 상품 서브 이미지 변경 -->
+	<update id = "changeSubImage" parameterType = "image">
+		update
+			GOODSIMG
+		set
+			savename = #{savename}
+		where
+			cate = #{scate1} and savename = #{existingimage}
+	</update>
+	
+	<!-- 상품 메인 이미지 변경 -->
+	<update id = "changeMainImage" parameterType = "image">
+		update
+			sgoodsinfo
+		set
+			GIMAGE = #{savename}
+		where
+			gcate = #{scate1}
+	</update>
+	
+	<!-- 메인이미지 가져오기 -->
+	<select id = "getMainImage" parameterType = "String" resultType = "String">
+		select 
+			gimage
+		from
+			sgoodsinfo
+		where
+			gcate = #{cate}
+	</select>
+	
+	
+	<!-- 상품 기본정보 수정 -->
+	<update id = "updateGoodsInfo" parameterType = "Goods">
+		update 
+			SGOODSINFO
+		set
+			GPRICE = #{price}, GSTATUS = #{status}, GTEMA = #{tema},
+			GSAVE = #{save},  GDISCOUNT = #{discount}
+		WHERE 
+			GCATE = #{temp}
+				
+	</update>
+	
+	
+	<!-- 상품 서브 이미지 검색 -->
+	<select id = "getSubimage" parameterType = "String" resultType ="Goods">
+		select 
+				SAVENAME 
+		from
+				GOODSIMG
+		where
+				CATE = #{temp} 
+				
+	</select>
+	<!-- 상품 삭제 -->
+	<delete id = "deleteGoods" parameterType = "int">
+		
+	</delete>
+	
+	<!-- 상품 사이즈, 색상, 수량 입력 -->
+	<insert id = "insertSCQ" parameterType = "Goods">
+		insert into
+				stock
+		values
+				(#{temp},#{size},#{color},#{quantity})
+	</insert>
+	
+	<!-- 상품 사이즈, 색상, 수량 가져오기 -->
+	<select id = "getSCQ" parameterType = "String" resultType = "Goods">
+		select 
+				SSIZE as SIZE2,
+				SCOLOR as COLOR2,
+				SCOUNT as QUANTITY2
+		from 
+				STOCK
+		where
+				SCATE = #{cate}
+		order by
+				field (ssize, 'S', 'M', 'L', 'XL')
+	</select>
+	
+	<!-- 상품 사이즈, 색상 중복 체크 -->
+	<select id = "checkSCQ" parameterType = "Goods" resultType = "Goods">
+		
+		select 
+				SSIZE as SIZE2,
+				SCOLOR as COLOR2,
+				SCOUNT as QUANTITY2
+		from 
+				STOCK
+		where
+				SCATE = #{temp} and SCOLOR = #{color} and SSIZE = #{size}
+				
+	</select>
+	
+	<!-- 상품 수량 변경 -->
+	<update id = "updateSCQ" parameterType ="Goods">
+		update
+				STOCK
+		set	
+				SCOUNT = SCOUNT + #{quantity}
+		where	
+				SCATE = #{temp} and SCOLOR = #{color} and SSIZE = #{size}
+	
+	</update>
+	
+	<!-- 상풍 수량 변경 -->
+		<update id = "modifySCQ" parameterType ="Goods">
+		update
+				STOCK
+		set	
+				SCOUNT = #{quantity2}
+		
+		where	
+				SCATE = #{cate} and SCOLOR = #{color2} and SSIZE = #{size2}
+	
+	</update>
+	
+	<!-- 상품 수량 사이즈 색상 삭제 -->
+	<delete id ="deleteSCQ" parameterType="Goods">
+		delete
+		from
+				STOCK
+		where 
+				SCATE = #{cate} and SCOLOR = #{color} and SSIZE = #{size} 
+			
+			
+	</delete>
+	
+	
+	<!-- 상품 총 개수 가져오기 -->
+	<select id = "getTotal" parameterType = "String" resultType = "int">
+		select
+			IFNULL(SUM(SCOUNT),0)
+		from
+			STOCK
+		where 
+			SCATE = #{cate}
+	</select>
+	
+	<!-- 주문관리 리스트 총 개수 -->
+	<select id="getOTotalList" resultType="int">
+		SELECT
+			count(*) as total
+		FROM
+			sorder
+	</select>
+	
+	<!-- 주문관리 리스트 가져오기 -->
+	<select id="getOrderList" resultType="order">
+		SELECT
+			*, color as color2, size as size2, price as price2, quantity as quantity2, 
+			case oship when 1 then '배송대기'
+				   	   when 2 then '배송중'
+				       when 3 then '배송완료'
+			           end as oship2
+		FROM
+			sorder
+		ORDER BY
+			odate DESC
+	</select>
+	
+	<!-- 운송장번호 부여 -->
+	<update id="parcelUpdate" parameterType="order">
+		UPDATE
+			sorder
+		SET
+			oparcel = #{oparcel} , oship = '2'
+		WHERE
+			ono =  #{ono}
+	</update>
+	
+	<!-- 배송상태 완료로 바꾸기 -->
+	<update id="ShipUpdate" parameterType="int">
+		UPDATE
+			sorder
+		SET
+			oship = '3'
+		WHERE
+			ono = #{ono}
+	</update>
+	
+	<!-- 고객관리 리스트 총 개수 -->
+	<select id="getUTotalList" resultType="int">
+		SELECT
+			count(*) as total
+		FROM
+			suserinfo u, sgrade r
+		WHERE
+			u.id = r.id
+			and
+			r.srank != '1'
+			and
+			u.status = '0'
+	</select>
+	
+	<!-- 고객관리 리스트 가져오기 -->
+	<select id="getUserList" resultType="login">
+		SELECT
+			* ,case r.srank when 1 then '관리자'
+						 	when 2 then '브론즈'
+							when 3 then '실버'
+							when 4 then '골드'
+						    end as resrank
+		FROM
+			suserinfo u, sgrade r
+		WHERE
+			u.id = r.id
+			and
+			r.srank != '1'
+			and
+			u.status = '0'
+		ORDER BY
+			jdate DESC
+	</select>
+	
+	<!-- 회원 탈퇴 요청 -->
+	<update id="userWithdraw" parameterType="string">
+		UPDATE
+			suserinfo
+		SET
+			status = '1'
+		WHERE
+			id = #{id}
+	</update>
+
+	<!-- 주문 테이블 아이디 검색 -->
+	<select id = "getOrderID" resultType = "string">
+	select
+		distinct id
+	from 
+		(select 
+				 id
+		from 
+				sorder
+		order by id desc) as id 
+	
+	</select>
+
+	
+	<!-- 사용자 후기 글 총 개수 -->
+	<select id="getApsTotalList" resultType="int">
+		SELECT
+			count(*) as total
+		FROM
+			psboard p INNER JOIN cate c
+		WHERE
+			p.cate = c.ccate
+			AND
+			isshow = '1'
+	</select>
+	
+	<!-- 사용자 후기 글 리스트 가져오기 -->
+	<select id="getApsList" resultType="board">
+		SELECT
+			*
+		FROM
+			psboard p INNER JOIN cate c
+		WHERE
+			p.cate = c.ccate
+			AND
+			isshow = '1'
+		ORDER BY
+			no desc
+	</select>
+	
+	<!-- 사용자 상품문의 글 총 개수 -->
+	<select id="getAinqTotalList" resultType="int">
+		SELECT
+			count(*) as total
+		FROM
+			inqboard i INNER JOIN cate c
+		WHERE
+			i.cate = c.ccate
+			AND
+			isshow = '1'
+	</select>
+	
+	<!-- 사용자 상품문의 글 리스트 가져오기 -->
+	<select id="getAinqList" resultType="board">
+		SELECT
+			*
+		FROM
+			inqboard i INNER JOIN cate c
+		WHERE
+			i.cate = c.ccate
+			AND
+			isshow = '1'
+		Order by 
+			no DESC;
+	</select>
+
+	
+	<!-- 관리자가 후기게시판 글 삭제 -->
+	<update id="AdminPSBoardDelete" parameterType="int">
+		UPDATE
+			psboard
+		SET
+			isshow = '0'
+		WHERE
+			no = #{no}
+	</update>
+	
+	<!-- 해당 품절 상품 등록해 놓은  사람 찾기-->
+	<select id = "findPerson" parameterType ="Goods" resultType = "meg">
+		select 
+			id
+		from
+			wish
+		where
+			cate = #{cate} and color = #{color2} and size = #{size2}
+	</select>
+	 
+	
+	
+	<!-- 품절 상품 찜해놓은 사람에게 쪽지 -->
+	<insert id = "sendNotice" parameterType = "meg">
+		INSERT
+		INTO
+			message
+		VALUES
+			((select ifnull(max(no), 0) + 1 from message ALIAS_FOR_SUBQUERY), 
+			#{id}, #{title}, #{body}, '1', now(), '1', '1', #{cate})
+	</insert>
+
+		<!-- 등급업한 사람에게 쪽지 -->
+	<insert id = "sendGradeUpNotice" parameterType = "meg">
+		INSERT
+		INTO
+			message
+		VALUES
+			((select ifnull(max(no), 0) + 1 from message ALIAS_FOR_SUBQUERY), 
+			#{id}, #{title}, #{body}, '1', now(), '1', '2', "")
+	</insert>
+	<!-- 해당 카테고리 상품의 총 수량 가져오기 -->
+	<select id = "getCateGoodsQuantity" parameterType = "string" resultType = "int">
+		select
+			sum(scount)
+		from
+			stock
+		where
+			scate = #{cate}
+		
+	</select>
+	<!-- 풀절 상품을 판매중으로 변경 -->
+	<update id = "updateGoodsStatus" parameterType = "string">
+		update
+			sgoodsinfo
+		set
+			gstatus = '2'
+		where
+			gcate = #{cate}
+	</update>
+	
+	<!-- 현재 적용된 배너  -->
+	<select id = "selectBanner" resultType = "image">
+		
+		select 
+			savename
+		from 
+			image
+	</select>
+	
+	<!-- 배너 삭제 -->
+	<delete id = "deleteBanner" parameterType = "String">
+		delete from
+			image
+		where
+			savename = #{savename}
+	</delete>
+
+	<!-- 재고관리 검색 리스트 정보 구하기 -->
+	<select id="getSSearchTotalList" resultType="int" parameterType="string">
+	select 	
+		count(*) as total
+ 	from cate c_1 inner join sgoodsinfo s_1 
+ 	where c_1.CCATE = s_1.GCATE and c_1.ccate like '____________'
+			AND c_1.CNAME LIKE CONCAT('%', #{word}, '%')
+	</select>	
+
+	
+	<!-- 재고관리 검색 리스트 -->
+	<select id="getSSearchList" resultType="Goods" parameterType="string">
+		select 	
+			s_1.GNO			 as no,
+			s_1.GCATE 		 as SCATE1,
+			s_1.GNO 		 as GNO,
+			s_1.GPRICE		 as PRICE,
+			s_1.GSAVE		 as	SAVE,
+			CASE s_1.GSTATUS WHEN '1' THEN '신상품'
+					    	 WHEN '2' THEN '판매중'
+					   	 	 WHEN '3' THEN '품절'
+					    	 WHEN '4' THEN '재고준비중'
+					    	 WHEN '5' THEN '판매완료'
+					    	 END AS STATUS,
+			CASE s_1.GTEMA   WHEN '1' THEN '스트릿'
+							 WHEN '2' THEN '캐주얼'
+							 WHEN '3' THEN '정장'
+							 WHEN '4' THEN '스포츠'
+							 WHEN '5' THEN '빈티지'
+							 WHEN '6' THEN '힙합'
+						 	 END AS TEMA,
+			s_1.GIMAGE 		 AS  SAVENAME,
+			s_1.GDISCOUNT    AS  DISCOUNT, 
+			c_1.CNAME 	 	 AS name
+ 	from cate c_1 inner join sgoodsinfo s_1 
+ 	where c_1.CCATE = s_1.GCATE and c_1.ccate like '____________'
+			AND c_1.CNAME LIKE CONCAT('%', #{word}, '%')
+	</select>
+</mapper>

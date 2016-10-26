@@ -1,0 +1,810 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC 
+				"-//mybatis.org//DTD Mapper 3.0//EN" 
+				"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+						
+<mapper namespace ="Shopping">
+
+
+	<!-- 메인화면 베너 이미지 가져오기 -->
+
+	<insert id ="insertimage" parameterType = "shop">
+		insert into image 
+		values(#{savename}, #{path}, 1)
+				
+	</insert>
+
+	<select id ="getimage" resultType = "shop">
+		select
+		      savename
+		from 
+			  image
+		where 
+		      isshow = '1'
+	</select>
+	
+	<!-- 메인화면 취향저격 가져오기 -->
+ 	<select id = "getPreferList" parameterType = "login" resultType = "shop">
+ 	SELECT 
+		GCATE as CATE,
+		GIMAGE as SAVENAME
+	FROM
+		SGOODSINFO
+	WHERE 
+		GTEMA IN(#{style1},#{style2})
+	ORDER BY
+		RAND() LIMIT 10
+ 	</select>
+	<!-- 메인화면 new상품 가져오기 -->
+	<select id = "getNewList" resultType = "shop">
+	select 
+		GCATE as CATE,
+		GIMAGE as SAVENAME
+	from
+		SGOODSINFO
+	where 
+		GSTATUS = '1' LIMIT 10
+	</select>
+	
+	<!-- 메인화면에 BEST 상품 이미지 뿌려주기 -->
+	<select id = "bestGoods" resultType = "shop">
+	select	
+			C.CCATE as CATE,
+			S.GIMAGE as SAVENAME
+	from
+			CATE C inner join SGOODSINFO S	 	
+	where
+			C.CCATE = S.GCATE			
+	ORDER BY 
+			C.CHIT DESC LIMIT 10;
+	</select>
+
+	<!-- 메뉴바 대 분류 구성 -->
+	<select id = "getLcate" resultType = "shop">
+		select
+				CCATE as CATE,
+				CNAME as NAME
+		from	
+				CATE	
+		where 
+				CCATE like '____'	
+	</select>
+	<!-- 메뉴바 중 분류 구성 -->
+	<select id = "getMcate" parameterType = "String" resultType = "shop">
+			select
+					SUBSTR(CCATE,1,4) as cate,
+					CNAME as name,
+					CCATE as mcate
+			from 
+				CATE
+			where
+				CCATE like concat(#{cate},'____')
+	</select>
+	
+
+
+
+	<!-- 규영 -->
+	<!-- 선택된 대 분류 상품 개수 구하기 -->
+	<select id="getLcateInfo" parameterType="string" resultType="int">
+		select 
+				count(*) as total
+		from
+				SGOODSINFO S inner join CATE C
+		where 
+				S.GCATE = C.CCATE AND
+				GCATE like concat(#{cate},'________')
+		order by
+				field (GSTATUS, '1', '2', '4', '3')
+	</select>
+	
+	<!-- 선택된 대 분류 상품 리스트 검색 -->
+	<select id = "getLcateList" parameterType = "String" resultType = "shop">
+		select 
+				S.GCATE as CATE,
+				S.GDISCOUNT as DISCOUNT,
+				S.GSTATUS   as STATUS,
+				S.GPRICE - ((S.GDISCOUNT * 0.01) * S.GPRICE ) as RESULT,
+				S.GPRICE as PRICE,
+				S.GIMAGE as SAVENAME,
+				C.CNAME as NAME
+		from
+				SGOODSINFO S inner join CATE C
+		where 
+				S.GCATE = C.CCATE AND
+				GCATE like concat(#{cate},'________')
+		order by
+				field (GSTATUS, '1', '2', '4', '3')
+	</select>
+	
+	<!-- 선택된 중 분류 상품 개수 -->
+	<select id="getMcateInfo" parameterType="string" resultType="int">
+		select 
+				count(*) as total
+		from
+				SGOODSINFO S inner join CATE C
+		where 
+				S.GCATE = C.CCATE AND
+				GCATE like concat(#{cate},'____')
+		order by
+				field (GSTATUS, '1', '2', '4', '3')
+	</select>
+	
+	<!-- 선택된 중 분류 상품 리스트 검색 -->
+	
+	<select id = "getMcateList" parameterType = "String" resultType = "shop">
+		select 
+				S.GCATE as CATE,
+				S.GPRICE as PRICE,
+				S.GDISCOUNT as DISCOUNT,
+				S.GSTATUS   as STATUS,
+				S.GPRICE - ((S.GDISCOUNT * 0.01) * S.GPRICE ) as RESULT,
+				S.GIMAGE as SAVENAME,
+				C.CNAME as NAME
+		from
+				SGOODSINFO S inner join CATE C
+		where 
+				S.GCATE = C.CCATE AND
+				GCATE like concat(#{cate},'____')
+		order by
+				field (GSTATUS, '1', '2', '4', '3')
+				
+	</select>
+	
+	<!-- 대 분류의 GoodsList에 색깔 뿌려주기 -->
+		<select id = "getLcateColor" parameterType = "String" resultType = "Goods">
+		select
+				distinct scolor as color2,
+				scate as cate
+		from
+				stock 
+		where
+				SCATE like concat(#{cate},'________')
+
+	</select> 
+		
+	<!-- 중 분류의 GoodsList에 색깔 뿌려주기 -->
+		<select id = "getMcateColor" parameterType = "String" resultType = "Goods">
+		select
+				distinct scolor as color2,
+				scate as cate
+		from
+				stock 
+		where
+				SCATE like concat(#{cate},'____')
+	
+	</select> 
+	
+	<!-- 모든 상품 컬러 가져오기 -->
+	<select id = "getAllcateColor" resultType = "Goods">
+		select
+				distinct scolor as color2,
+				scate as cate
+		from
+				stock 
+	</select>
+	
+	<!-- 색상별 상품 개수 -->
+	<select id="getColorInfo" parameterType="Goods" resultType="int">
+	<if test = "kind eq 'LLIST'">
+		select 
+				count(*) as total
+		from
+				SGOODSINFO S inner join CATE C
+					
+		where 
+				S.GCATE = C.CCATE AND
+				
+				GCATE IN
+				(select
+						distinct Scate
+				from
+						stock 
+				where 
+						scolor = #{color}) AND
+	
+		
+				GCATE like concat(#{cate},'________')
+		order by
+				field (GSTATUS, '1', '2', '4', '3')
+	</if>
+	<if test = "kind eq 'MLIST'">
+		select 
+				count(*) as total
+		from
+				SGOODSINFO S inner join CATE C
+					
+		where 
+				S.GCATE = C.CCATE AND
+				
+				GCATE IN
+				(select
+						distinct Scate
+				from
+						stock 
+				where 
+						scolor = #{color}) AND
+	
+		
+				GCATE like concat(#{cate},'____')
+		order by
+				field (GSTATUS, '1', '2', '4', '3')
+	</if>
+	</select>
+	
+	<!-- 색상별 상품 리스트 -->
+	<select id = "getGoodsColorList" parameterType="Goods" resultType = "Goods">
+		select 
+				S.GCATE as CATE,
+				S.GPRICE as PRICE,
+				S.GDISCOUNT as DISCOUNT,
+				S.GSTATUS   as STATUS,
+				S.GPRICE - ((S.GDISCOUNT * 0.01) * S.GPRICE ) as RESULT,
+				S.GIMAGE as SAVENAME,
+				C.CNAME as NAME
+		from
+				SGOODSINFO S inner join CATE C
+		where 
+				S.GCATE = C.CCATE AND
+				
+				GCATE IN
+				(select
+						distinct Scate
+				from
+						stock 
+				where 
+				<if test = "kind eq 'LLIST'">
+						scolor = #{color}) AND
+				GCATE like concat(#{cate},'________')
+				</if>
+				<if test = "kind eq 'MLIST'">
+						scolor = #{color}) AND
+				GCATE like concat(#{cate},'____')	
+				</if>
+		order by
+				field (GSTATUS, '1', '2', '4', '3')			
+	</select>
+	
+	<!-- 테마별 상품 개수 -->
+	<select id="getTemaInfo" parameterType="Goods" resultType="int">
+	<if test = "kind eq 'LLIST'">
+		select 
+				count(*) as total
+		from
+				SGOODSINFO S inner join CATE C
+					
+		where 
+				S.GCATE = C.CCATE AND
+				
+				Gtema = #{tema} AND
+			
+				GCATE like concat(#{cate},'________')
+		order by
+				field (GSTATUS, '1', '2', '4', '3')		
+	</if>
+	<if test = "kind eq 'MLIST'">
+		select 
+				count(*) as total
+		from
+				SGOODSINFO S inner join CATE C
+					
+		where 
+				S.GCATE = C.CCATE AND
+				
+				Gtema = #{tema} AND
+			
+				GCATE like concat(#{cate},'____')
+		order by
+				field (GSTATUS, '1', '2', '4', '3')
+	</if>
+	</select>
+	
+	
+	
+	
+	<!-- 테마별 상품 검색하기 -->
+	<select id ="getGoodsTemaList" parameterType = "Goods" resultType = "Goods">
+		
+		select 
+				S.GCATE as CATE,
+				S.GPRICE as PRICE,
+				S.GDISCOUNT as DISCOUNT,
+				S.GSTATUS   as STATUS,
+				S.GPRICE - ((S.GDISCOUNT * 0.01) * S.GPRICE ) as RESULT,
+				S.GIMAGE as SAVENAME,
+				C.CNAME as NAME
+		from
+				SGOODSINFO S inner join CATE C
+					
+		where 
+				S.GCATE = C.CCATE AND
+				
+				Gtema = #{tema} AND
+	<if test = "kind eq 'LLIST'">		
+				GCATE like concat(#{cate},'________')
+		order by
+				field (GSTATUS, '1', '2', '4', '3')		
+	</if>
+	<if test = "kind eq 'MLIST'">
+	
+				GCATE like concat(#{cate},'____')
+		order by
+				field (GSTATUS, '1', '2', '4', '3')
+	</if>
+	
+	</select>
+	
+	<!-- 인기, 가격순 상품 개수 -->
+	<select id="getSortInfo" parameterType="Goods" resultType="int">
+
+		select 
+				count(*) as total
+		from
+				SGOODSINFO S inner join CATE C
+					
+		where 
+				S.GCATE = C.CCATE AND
+	<if test = "kind eq 'LLIST'">					
+				GCATE like concat(#{cate},'________')
+	
+	</if>
+	<if test = "kind eq 'MLIST'">
+				
+				GCATE like concat(#{cate},'____')
+	</if>
+	
+	</select>
+	
+	
+	<!-- 상품 인기순,가격순,신상순 정렬 -->
+	<select id = "getSortList" parameterType = "Goods" resultType = "Goods">
+				select 
+				S.GCATE as CATE,
+				S.GPRICE as PRICE,
+				S.GDISCOUNT as DISCOUNT,
+				S.GSTATUS   as STATUS,
+				S.GPRICE - ((S.GDISCOUNT * 0.01) * S.GPRICE ) as RESULT,
+				S.GIMAGE as SAVENAME,
+				C.CNAME as NAME
+		from
+				SGOODSINFO S inner join CATE C			
+		where 
+				S.GCATE = C.CCATE AND
+	<if test = "kind eq 'LLIST'">		
+				GCATE like concat(#{cate},'________')
+	<choose>
+		<when test = "sort == 1">
+			order by
+				C.CHIT DESC
+		</when>
+		<when test = "sort == 2">
+			order by 
+					CAST(S.GPRICE AS UNSIGNED) 
+		</when>
+		<when test = "sort == 3">
+			order by 
+					CAST(S.GPRICE AS UNSIGNED) DESC
+		</when>
+		<otherwise>
+			order by
+				field (GSTATUS, '1', '2', '4', '3')
+		</otherwise>
+	</choose>			
+	
+</if>
+	
+	
+	<if test = "kind eq 'MLIST'">
+	
+			GCATE like concat(#{cate},'____')
+				
+	<choose>
+		<when test = "sort eq '1'">
+			order by
+				C.CHIT DESC
+		</when>
+		<when test = "sort eq '2'">
+			order by 
+				S.GPRICE 
+		</when>
+		<when test = "sort eq '3'">
+			order by 
+				S.GPRICE DESC
+		</when>
+		<otherwise>
+			order by
+				field (GSTATUS, '1', '2', '4', '3')
+		</otherwise>
+	</choose>
+	</if>
+	</select>
+	
+	<!-- 상품 컬러 개수 알기 -->
+	<select id = "getColorCount" parameterType = "String" resultType ="int">
+		select
+				count(distinct scolor) as count
+		from
+				stock
+		where
+				scate = #{cate}
+	</select> 
+	
+	
+	<!-- 상품 상세보기 정보  -->
+	<select id = "getGoodsInfo" parameterType = "String" resultType = "Goods">
+		select 
+				s.gimage as savename,
+				s.gcate  as cate,
+				s.gprice as price,
+				s.gsave  as save,
+				S.GDISCOUNT as DSCOUNT,
+				S.GPRICE - ((S.GDISCOUNT * 0.01) * S.GPRICE ) as RESULT,
+				c.cname  as name
+				
+		from 
+				sgoodsinfo s inner join cate c 
+		where
+				s.gcate = c.ccate and
+				s.gcate = #{cate}				
+	</select>
+	
+	<!-- 상품 상세보기 사이즈 구성 알아보기 -->
+	<select id = "getGoodsSize" parameterType = "String" resultType = "Goods">
+		select
+				distinct ssize as size
+		from
+				stock 
+		where
+				scate = #{cate}
+		order by
+				field (ssize, 'S', 'M', 'L', 'XL')
+	</select> 
+	
+	
+	<!-- 상품 상세보기 색상 구성 알아보기 -->
+	<select id = "getGoodsColor" parameterType = "String" resultType = "Goods">
+		select
+				distinct scolor as color
+		from
+				stock 
+		where
+				scate = #{cate}
+	</select> 
+	
+	<!-- 상품 상세보기 이미지 알아보기   -->
+	<select id = "getGoodsImage" parameterType = "String" resultType = "Goods">
+		select 
+				savename
+		from
+				goodsimg
+		where
+				cate = #{cate}
+	</select>
+	
+	<!-- 아작스 사이즈 -->
+	<select id = "getSize" parameterType = "Goods" resultType = "Goods">
+		select
+			ssize as size, scount as quantity
+	from
+		((select *
+				from stock
+		where 
+				scate = #{cate} )ALIAS_FOR_SUBQUERY)
+	where
+		scolor = #{color}
+	order by
+		field (ssize, 'S', 'M', 'L', 'XL')
+		
+	</select>
+	
+	<!-- 카트 담기 -->
+	<insert id="insertCart" parameterType ="order">
+		insert into 
+					SCART
+		values((select IFNULL(MAX(CNO),0)+1 from SCART ALIAS_FOR_SUBQUERY), #{id},#{savename},#{name},
+			  #{quantity2},#{color2},#{size2},#{price2},#{cate});
+	
+	</insert>
+	
+	<!-- 옷 인기도 증가 -->
+	<update id = "upHit" parameterType ="order">
+		update
+			CATE
+		SET
+			CHIT = CHIT + 1
+		where
+			CCATE = #{cate}
+	</update>
+	
+	<!-- 상품 재고 수량 확인 -->
+	<select id = "getSumQuantity" parameterType = "string" resultType = "int">
+		select
+			SUM(SCOUNT)
+		from
+			stock
+		where 
+			SCATE = #{cate}
+	</select>
+	
+	<!-- 상품의 전체 수량이 0이면 상품 상태를 품절로 변경 -->
+	<update id = "updateStatus" parameterType = "string">
+		update
+			sgoodsinfo
+		set
+			gstatus = '3'
+		where
+			gcate = #{cate}
+	</update>
+		<!-- 주문정보 리스트 요청 -->
+	<select id="getOrderList2" parameterType="order" resultType="order">
+		SELECT
+			*, color as color2, size as size2, price as price2, quantity as quantity2, 
+			case oship when 1 then '배송대기'
+				   	   when 2 then '배송중'
+				       when 3 then '배송완료'
+			           end as oship2
+		FROM
+			sorder
+		WHERE
+			id = #{id} and no = #{no}
+	</select>
+		<!-- new 상품 -->
+	<select id = "getNew" resultType = "shop">
+		select 
+				s.gimage as savename,
+				s.gcate  as cate,
+				s.gprice as price,
+				s.gsave  as save,
+				S.GDISCOUNT as DSCOUNT,
+				S.GPRICE - ((S.GDISCOUNT * 0.01) * S.GPRICE ) as RESULT,
+				c.cname  as name,
+				s.gstatus as status
+				
+		from 
+				sgoodsinfo s inner join cate c 
+		where
+				s.gcate = c.ccate and
+				s.gstatus = '1'
+	</select>
+	
+	<!-- BEST50 -->
+	<select id = "getBest50" resultType = "shop">
+		select 
+				s.gimage as savename,
+				s.gcate  as cate,
+				s.gprice as price,
+				s.gsave  as save,
+				S.GDISCOUNT as DSCOUNT,
+				S.GPRICE - ((S.GDISCOUNT * 0.01) * S.GPRICE ) as RESULT,
+				c.cname  as name,
+				s.gstatus as status
+		from 
+				sgoodsinfo s inner join cate c 
+		where
+				s.gcate = c.ccate
+		order by 
+				C.CHIT DESC LIMIT 50;
+	</select>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	<!-- 영민 -->
+	<!-- 구입폼에서 적립금 가져오기 -->
+	<select id="getSmoney" parameterType="string" resultType="int">
+		SELECT
+			smoney
+		FROM
+			savemoney
+		WHERE
+			id = #{id}
+	</select>
+	
+	<!-- 회원 정보 가져오기 -->
+	<select id="getUserInfo" parameterType="string" resultType="login">
+		
+		select 
+				pc, addr1, addr2, tel, email , srank as grade
+		from 
+				suserinfo info inner join sgrade grade
+		where 
+				info.id = grade.ID and info.id =#{id}
+
+	</select>
+	<!-- 구입 테이블 MAX번호 알아내기 -->
+	<select id = "getMaxOrderNo" parameterType = "string" resultType = "int">
+		select 
+				IFNULL(MAX(no),0) + 1
+		from
+				sorder
+		where
+				id = #{id}	
+	</select>
+	<!-- 구입 요청 -->
+	<insert id="buyProc" parameterType="order">
+		INSERT
+		INTO
+			sorder
+	 	VALUES(#{no},(select ifnull(max(ono), 30240000) + 1 from sorder ALIAS_FOR_SUBQUERY)
+			,#{id}, #{oname}, #{oaddr}, #{otel}, #{oemail}, 
+			#{savename}, #{name}, #{rname}, #{raddr}, #{rtel}, 
+			#{color2}, #{size2}, #{quantity2}, #{price2}, 
+			now(), '----',#{totalprice}, '1')
+	</insert>
+	
+	<!-- 적립금 쌓기 -->
+	<update id="save" parameterType="order">
+		UPDATE
+			savemoney
+		SET
+			smoney = smoney + #{save}
+		WHERE
+			id = #{id}
+	</update>
+	
+	<!-- 적립금 사용 차감 -->
+	<update id="useSmoney" parameterType="order">
+		UPDATE
+			savemoney
+		SET
+			smoney = smoney - #{usemoney}
+		WHERE
+			id = #{id}
+	</update>
+	
+	<!-- 산 수량 만큼 차감 -->
+	<update id="decQuantity" parameterType="order">
+		UPDATE
+			stock
+		SET
+			SCOUNT = SCOUNT - #{quantity2}
+		where
+			scate = #{cate} and ssize = #{size2} and scolor = #{color2}
+	</update>
+	
+	<!-- 주문정보 리스트 요청 -->
+	<select id="getOrderList" parameterType="order" resultType="order">
+		SELECT
+			*, color as color2, size as size2, price as price2, quantity as quantity2, 
+			case oship when 1 then '배송대기'
+				   	   when 2 then '배송중'
+				       when 3 then '배송완료'
+			           end as oship2
+		FROM
+			sorder
+		WHERE
+			id = #{id} and no = #{no}
+	    limit 1
+	</select>
+	
+	<!-- 주문정보 데이터 총 개수 구하기 -->
+	<select id="getOrderTotalList" parameterType="string" resultType="int">
+		SELECT
+			count(*) as total
+		FROM
+			sorder
+		WHERE
+			id = #{id}
+	</select>
+	
+	<!-- 주문정보 데이터 총 개수 구하기 -->
+	<select id="getOrderTotalList2" parameterType="string" resultType="int">
+		SELECT
+			distinct no as total
+		FROM
+			sorder
+		WHERE
+			id = #{id}
+	</select>
+	
+	
+	<!-- 주문정보 그룹의 속한 상품 개수 구하기 -->
+	<select id="getGroupCount" parameterType="order" resultType="int">
+		SELECT
+			count(*) as total
+		FROM
+			sorder
+		WHERE
+			id = #{id} and no = #{no}
+	</select>
+	
+	<!-- 후기게시판 리스트 요청 -->
+	<select id="getPBoardList" parameterType="string" resultType="board">
+		SELECT 
+			@rnum:=@rnum+1 rownum, p.*
+		FROM
+			(select @rnum:=0) a, 
+		(SELECT
+			no, name, body, pdate, score
+		FROM
+			psboard
+		WHERE
+			cate = #{cate}) p
+		ORDER BY rownum desc;
+	</select>
+	
+	<!-- 후기게시판 데이터 총 개수 구하기 -->
+	<select id="getPBoardTotalList" parameterType="string" resultType="int">
+		SELECT
+			count(*) as total
+		FROM
+			psboard
+		WHERE
+			cate = #{cate}
+	</select>
+	
+	<!-- 상품문의 게시판 리스트 요청 -->
+	
+	<select id="getIBoardList" parameterType="string" resultType="board">
+		SELECT 
+		@rnum:=@rnum+1 rownum, p.*
+		FROM 
+			(select @rnum:=0) a, 
+		(SELECT
+			*
+		FROM
+			inqboard
+		WHERE
+			cate = #{cate}
+			and
+			isshow = '1') p
+		ORDER BY rownum desc;
+
+	</select>
+	
+	<!-- 상품문의 게시판 데이터 총 개수 구하기 -->
+	<select id="getIBoardTotalList" parameterType="string" resultType="int">
+		SELECT
+			count(*) as total
+		FROM
+			inqboard
+		WHERE
+			cate = #{cate}
+			and
+			isshow = '1'
+	</select>
+	
+	<!-- 새메세지 있는지 확인 -->
+	<select id="newMeg" parameterType="string" resultType="int">
+		SELECT
+			count(*) as total
+		FROM
+			message
+		WHERE
+			id = #{id}
+			AND
+			newletter = '1'
+	</select>
+	
+	<!-- 총 평점 계산위해 카테안에있는 평점 뽑아오기 -->
+	<select id="avgScore" parameterType="string" resultType="int">
+		SELECT
+			score
+		FROM
+			psboard
+		WHERE
+			cate = #{cate}
+	</select>
+	<!-- 주문 삭제 -->
+	<delete id = "cancelOrder" parameterType = "int">
+		delete from
+			sorder
+		where 
+			no = #{no}
+	</delete>
+
+</mapper>

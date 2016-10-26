@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- xml파일이 되기 위한 조건
+	1. 1번줄은 xml파일 선언
+	2. (선택) 필요하면 DTD, 스키마 선언을 한다.
+		이 xml파일에서 사용하는 태그의 종류를 미리 밝히는 것
+		(사용하지 않으면 스프링이 파싱하지 못한다.) 
+	3. 반드시 ROOT 태그가 하나 있어야 한다.
+-->
+<!DOCTYPE configuration 
+PUBLIC "-//mybatis.org//DTD Config 3.0//EN" 
+"HTTP://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+	<!-- 이 부분에서 myBatis에 관련된 환경설정을 한다 -->
+	<!-- 기본 동작에 대한 환경 설정을 한다. -->
+	<settings>
+		<!-- 캐쉬 메모리 사용여부 -->
+		<setting name="cacheEnabled" value="false" />
+		<!-- 일반화 키 사용여부 -->
+		<setting name="useGeneratedKeys" value="true" />
+		<!-- 기본 질의 실행 방식 -->
+		<setting name="defaultExecutorType" value="REUSE" />	
+	
+	</settings>
+	
+	<typeAliases>
+		<typeAlias alias="int" type="java.lang.Integer"/>
+		<typeAlias alias="string" type="java.lang.String"/>
+		<typeAlias alias="boolean" type="java.lang.Boolean"/>
+		<typeAlias alias="imap" type="java.util.HashMap"/>
+		<typeAlias alias ="shop" type = "com.manefit.data.ShoppingData"/>
+		
+		<typeAlias alias ="image" type = "com.manefit.data.ImageData"/>
+
+		<typeAlias alias ="Goods" type = "com.manefit.data.GoodsData"/>
+
+		<typeAlias alias ="login" type = "com.manefit.data.LoginData"/>
+
+		<typeAlias alias ="faq" type = "com.manefit.data.FAQData"/>
+		
+		<typeAlias alias ="order" type = "com.manefit.data.OrderData"/>
+		
+		<typeAlias alias ="meg" type = "com.manefit.data.MessageData"/>
+		
+		<typeAlias alias ="board" type = "com.manefit.data.BoardData"/>
+	</typeAliases>	
+	
+	<mappers>
+		<mapper resource = "/com/manefit/sql/ShoppingSQL.xml"/>
+		<mapper resource = "/com/manefit/sql/AdminSQL.xml"/>
+		<mapper resource = "/com/manefit/sql/LoginSQL.xml"/>
+		<mapper resource = "/com/manefit/sql/FAQSQL.xml"/>
+		<mapper resource = "/com/manefit/sql/MyPageSQL.xml"/>
+		<mapper resource = "/com/manefit/sql/BoardSQL.xml"/>
+	</mappers>
+
+
+</configuration>

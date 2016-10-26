@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC 
+				"-//mybatis.org//DTD Mapper 3.0//EN" 
+				"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Login">
+	<!-- 로그인시 회원 여부 -->
+	<select id="loginCheck" parameterType="login" resultType="login">
+		SELECT id, name
+		FROM
+			suserinfo
+		WHERE id = #{id}
+			  and
+			  pw = #{pw}
+			  and
+			  status = '0'	
+	</select>
+	
+	<!-- 회원 등급 가져오기 -->
+	<select id="getGrade" parameterType="string" resultType="string">
+		SELECT
+		case srank when 1 then '관리자'
+				   when 2 then '브론즈'
+				   when 3 then '실버'
+				   when 4 then '골드'
+			       end as srank
+		FROM
+			sgrade
+		WHERE id = #{id}
+	</select>
+	
+	<!-- 회원가입 정보 기입 -->
+	<insert id="signUpProc" parameterType="login">
+		INSERT
+		INTO
+			suserinfo
+		VALUES
+			( #{id}, #{pw}, #{name}, #{email}, #{birth}, #{tel}, #{pc}, #{addr1}, #{addr2}, now() , '0',#{style1},#{style2})
+	</insert>
+	<insert id="signUpRank" parameterType="login">
+		INSERT
+		INTO
+			sgrade
+		VALUES
+			( #{id}, '2')	
+	</insert>
+	<insert id="signUpSmoney" parameterType="login">
+		INSERT
+		INTO
+			savemoney
+		VALUES
+			( #{id}, '1000')
+	</insert>
+	
+	<!-- 아이디 중복 확인 -->
+	<select id="idCheck" parameterType="string" resultType="int">
+		SELECT
+			count(*)
+		FROM
+			suserinfo
+		WHERE
+			id = #{id}
+			and
+			status = '0'
+	</select>
+	
+	<!-- 회원정보에서 스타일 가져오기 -->
+	<select id = "getStyle" parameterType = "string" resultType = "login">
+		select 
+			STYLE1,
+			STYLE2
+		from
+			SUSERINFO
+		where
+			ID = #{id}
+			
+	</select>
+
+	
+	<!-- 회원 구입 정보에서 총 구입한 가격 알아오기 -->
+	<select id = "getTotalPrice" parameterType = "string" resultType ="int">
+		select
+				ifnull(sum(price),0) as price
+		from
+				sorder
+		where
+				id = #{id}
+	</select>
+	
+	<!-- 회원 등급업 -->
+	<update id = "upGrade" parameterType = "login">
+		update 
+				sgrade
+		set
+				srank = #{grade}
+		where
+				id = #{id}
+			
+	</update>
+	
+	<!-- 등급업 축하 적립금 주기 -->
+	<update id = "upSaveMoney" parameterType = "login">
+		update
+				savemoney
+		set
+				smoney =  smoney + #{savemoney}
+		where
+				id = #{id}
+	</update>
+	 
+
+	<!-- 새 메세지 총 개수 -->
+	<select id="newMegCount" parameterType="string" resultType="int">
+		SELECT
+			count(*) as total
+		FROM
+			message
+		WHERE
+			id = #{id}
+			AND
+			newletter = '1'
+	</select>
+
+</mapper>

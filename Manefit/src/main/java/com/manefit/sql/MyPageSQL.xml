@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC 
+				"-//mybatis.org//DTD Mapper 3.0//EN" 
+				"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="MyPage">
+	<!-- 장바구니 담기 -->
+	<insert id="insertCart" parameterType="order">
+		INSERT
+		INTO
+			SCART
+		VALUES
+			((select ifnull(max(cno), 0) + 1 from scart ALIAS_FOR_SUBQUERY),
+			#{id}, #{savename}, #{name}, #{qauntity}, #{color}, #{size}, 
+			#{price}, #{cate})
+	</insert>
+	
+	<!-- 장바구니 리스트 요청 -->
+	<select id="getCartList" parameterType="string" resultType="order">
+		select 
+				s.CNO as ONO,
+				s.ID,
+				s.SAVENAME,
+				s.NAME,
+				s.CATE, 
+				s.QUANTITY as QUANTITY2,
+				s.COLOR as COLOR2,
+				s.SIZE as SIZE2,
+				s.PRICE as PRICE2,
+				g.GSAVE as SAVE2
+		from 
+				SCART s inner join sgoodsinfo g
+		where
+				s.CATE = g.GCATE AND
+				ID = #{id}
+		order by s.cno desc
+	</select>
+	
+	<!-- 장바구니 데이터 총 개수 구하기 -->
+	<select id="getCartTotalList" parameterType="string" resultType="int">
+		SELECT
+			count(*) as total
+		FROM
+			SCART
+		WHERE
+			id = #{id}
+	</select>
+	
+	<!-- 장바구니 선택된 목록 삭제 -->
+	<delete id ="deleteCartList" parameterType ="int">
+		delete 
+		from
+			SCART
+		where 
+			CNO = #{no}
+	</delete>
+	<!-- 찜 목록 삭제하기 -->
+		<delete id ="deleteWishList" parameterType ="int">
+		delete 
+		from
+			WISH
+		where 
+			WNO = #{no}
+	</delete>
+	<!-- 장바구니에서 구입 시 장바구니 목록 지우기 -->
+	<delete id = "deleteCartList2" parameterType = "string">
+		delete
+		from
+			SCART
+		where
+			ID = #{id}
+			
+	</delete>
+	
+	
+	<!-- 찜목록 담기 -->
+	<insert id="insertFavor" parameterType="order">
+		INSERT
+		INTO
+			WISH
+		VALUES
+			((select ifnull(max(wno), 0) + 1 from wish ALIAS_FOR_SUBQUERY),
+			#{id}, #{savename},#{name}, #{quantity2},#{color2}, #{size2}, #{price2}, 
+			#{cate})
+	</insert>
+	
+	<!-- 찜목록 데이터 총 개수 구하기 -->
+	<select id="getFavorTotalList" parameterType="string" resultType="int">
+		SELECT
+			count(*) as total
+		FROM
+			WISH
+		WHERE
+			id = #{id}
+	</select>
+	
+	<!-- 찜목록 리스트 요청 -->
+	<select id="getFavorList" parameterType="string" resultType="order">
+		select 
+				w.WNO as ONO,
+				w.ID,
+				w.CATE,
+				w.SAVENAME,
+				w.NAME, 
+				w.QUANTITY as QUANTITY2,
+				w.COLOR as COLOR2,
+				w.SIZE as SIZE2,
+				w.PRICE as PRICE2,
+				g.GSAVE as SAVE2
+			
+		from 
+				WISH w inner join sgoodsinfo g
+		where
+				w.CATE = g.GCATE AND
+				ID = #{id}
+	</select>
+	
+	<!-- 쪽지함 데이터 총 개수 구하기 -->
+	<select id="getMsTotalList" parameterType="string" resultType="int">
+		SELECT
+			count(*) as total
+		FROM
+			message
+		WHERE
+			id = #{id}
+	</select>
+	
+	<!-- 쪽지함 리스트 가져오기 -->
+	<select id="getMsList" parameterType="string" resultType="meg">
+		SELECT 
+			@rnum:=@rnum+1 rownum, m.*
+		FROM
+			(select @rnum:=0) a, 
+		(SELECT
+			*
+		FROM
+			message
+		WHERE
+			id = #{id}) m
+		ORDER BY rownum desc;
+	</select>
+	
+	<!-- 새글 읽은글로 업데이트 -->
+	<update id="readMeg" parameterType="int">
+		UPDATE
+			message
+		SET
+			newletter = '0'
+		WHERE
+			no = #{no}
+	</update>
+	
+	<!-- 해당 번호 글정보 가져오기 -->
+	<select id="megInfo" parameterType="int" resultType="meg">
+		SELECT 
+			@rnum:=@rnum+1 rownum, m.*
+		FROM
+			(select @rnum:=0) a, 
+		(SELECT
+			*
+		FROM
+			message
+		WHERE
+			no = #{no}) m
+		ORDER BY rownum desc;
+	</select>
+	
+	<!-- 세메세지 있는지 확인 -->
+	<select id="newMeg" parameterType="string" resultType="int">
+		SELECT
+			count(*) as total
+		FROM
+			message
+		WHERE
+			id = #{id}
+			AND
+			newletter = '1'
+	</select>
+	
+	<!-- 내가쓴 후기글 데이터 총 개수 구하기 -->
+	<select id="getMypsTotalList" parameterType="string" resultType="int">
+		SELECT
+			count(*) as total
+		FROM
+			psboard p INNER JOIN cate c
+		WHERE
+			p.cate = c.ccate
+			AND
+			id = #{id}
+			AND
+			isshow = '1'
+	</select>
+	
+	<!-- 내가쓴 후기글 리스트 가져오기 -->
+	<select id="getMypsList" parameterType="string" resultType="board">
+		SELECT
+			*
+		FROM
+			psboard p INNER JOIN cate c
+		WHERE
+			p.cate = c.ccate
+			AND
+			id = #{id}
+			AND
+			isshow = '1'
+		ORDER BY
+			no desc
+	</select>
+	
+	<!-- 내가쓴 상품문의 글 데이터 총 개수 구하기 -->
+	<select id="getMyinqTotalList" parameterType="string" resultType="int">
+		SELECT
+			count(*) as total
+		FROM
+			inqboard i INNER JOIN cate c
+		WHERE
+			i.cate = c.ccate
+			AND
+			id = #{id}
+			AND
+			isshow = '1'
+	</select>
+	
+	<!-- 내가쓴 상품문의 글 리스트 가져오기 -->
+	<select id="getMyinqList" parameterType="string" resultType="board">
+		SELECT
+			*
+		FROM
+			inqboard i INNER JOIN cate c
+		WHERE
+			i.cate = c.ccate
+			AND
+			id = #{id}
+			AND
+			isshow = '1'
+		ORDER BY
+			no desc
+	</select>
+		
+	
+</mapper>

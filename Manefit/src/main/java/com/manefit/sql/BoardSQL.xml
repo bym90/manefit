@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC 
+				"-//mybatis.org//DTD Mapper 3.0//EN" 
+				"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+						
+<mapper namespace ="Board">
+	<!-- 상품 후기 쓰기 -->
+	<insert id="psWrite" parameterType="board" >
+		INSERT
+		INTO
+			psboard
+		VALUES
+			((select ifnull(max(no), 0) + 1 from psboard ALIAS_FOR_SUBQUERY),
+			#{cate}, #{id}, #{name}, #{body}, now(), #{score}, '1')
+	</insert>
+	
+	<!-- 상품 문의 게시판 최대 번호 정보 -->
+<!-- 	<select id="maxNo" parameterType="string" resultType="int"> -->
+<!-- 		SELECT -->
+<!-- 			ifnull(max(no), 0) + 1 -->
+<!-- 		FROM -->
+<!-- 			inqboard -->
+<!-- 		WHERE -->
+<!-- 			cate = #{cate} -->
+<!-- 	</select> -->
+	
+	<!-- 상품 문의 게시판 -->
+	<insert id="insertInqBoard" parameterType="board">
+		INSERT
+		INTO
+			inqboard
+		VALUES
+			((select ifnull(max(no), 0) + 1 from inqboard ALIAS_FOR_SUBQUERY), #{cate}, #{name}, #{id}, #{pw}, #{title}, #{body}, now(), '', '1')
+	</insert>
+	
+	<!-- 번호에 해당하는 비밀번호 갯수 -->
+	<select id="IpwCheck" parameterType="board" resultType="int">
+		SELECT
+			count(*) as total
+		FROM
+			inqboard
+		WHERE
+			pw = #{pw}
+			AND
+			no = #{no}
+			AND
+			cate = #{cate}
+	</select>
+	
+	<!-- 번호에 해당하는 내용 -->
+	<select id="getBody" parameterType="board" resultType="board">
+		SELECT
+			body, rbody
+		FROM
+			inqboard
+		WHERE
+			pw = #{pw}
+			AND
+			no = #{no}
+			AND
+			cate = #{cate}
+	</select>
+
+	<!-- 상품문의  답변쓰기 -->
+	<insert id="IAnswerProc" parameterType="board">
+		UPDATE
+			inqboard
+		SET
+			title = #{rtitle} , rbody = #{rbody}
+		WHERE
+			no = #{no}
+			AND
+			cate = #{cate}
+			AND
+			isshow = '1'
+	</insert>
+	
+	<!-- 쪽지함에 뿌려주기 위한 답변의 정보 가져오기 -->
+	<select id="replyInfo" parameterType="string" resultType="board">
+		SELECT
+			*
+		FROM
+			inqboard
+		WHERE
+			no = #{no}
+			AND
+			cate = #{cate}
+			AND
+			isshow = '1'
+	</select>
+	
+	<!-- 쪽지함 답변 쓰기 -->
+	<insert id="inqMegInsert" parameterType="board">
+		INSERT
+		INTO
+			message
+		VALUES
+			((select ifnull(max(no), 0) + 1 from message ALIAS_FOR_SUBQUERY), 
+			#{id}, #{title}, #{body}, '1', now(), '1', '0', #{cate})
+	</insert>
+	
+</mapper>
